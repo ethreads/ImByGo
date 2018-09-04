@@ -6,11 +6,12 @@ import (
 	"fpdxIm/services"
 	"fpdxIm/models"
 	"log"
+	"github.com/DeanThompson/ginpprof"
 )
-
 
 func main() {
 	r := gin.Default()
+	ginpprof.Wrap(r)
 	m := melody.New()
 	models.Init()
 	services.Init()
