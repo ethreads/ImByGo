@@ -4,9 +4,10 @@ import (
 	"fpdxIm/models"
 	"encoding/json"
 	"log"
+	"fpdxIm/config"
 )
 
-var Replyqueue = make(chan *models.Msg, 10000)
+var Replyqueue = make(chan *models.Msg, config.Config.App["Replyqueue"].(int))
 
 // 回执处理中心
 func replyWorking()  {
