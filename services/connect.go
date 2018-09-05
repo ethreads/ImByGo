@@ -15,7 +15,7 @@ func connection(msg *models.Msg)  {
 	// 1. 认证
 	uid, err := Auth(msg.Session.Request)
 	if err != nil {
-		replyMsg, err := msg.NewReply("建立连接处理:认证失败", models.ReplyError)
+		replyMsg, err := msg.NewReply("建立连接处理:认证失败" + err.Error(), models.ReplyError)
 		if err != nil {
 			log.Printf("建立连接处理:回执消息异常:%s", err.Error())
 		}
@@ -23,9 +23,9 @@ func connection(msg *models.Msg)  {
 		return
 	}
 	// 2. 生成uuid
-	uuid := strconv.Itoa(uid) + "@" + config.Config.Address + "@" + strconv.FormatInt(time.Now().UnixNano(), 10)
+	uuid := uid + "@" + config.Config.Address + "@" + strconv.FormatInt(time.Now().UnixNano(), 10)
 	// 3. 建立uid-uuid映射
-	data, _  := models.Redis.HGet("ws:connpool", strconv.Itoa(uid)).Result()
+	data, _  := models.Redis.HGet("ws:connpool", uid).Result()
 	var v []string
 	if data != "" {
 		if err := json.Unmarshal([]byte(data), &v); err != nil {
@@ -49,7 +49,7 @@ func connection(msg *models.Msg)  {
 		Replyqueue <- replyMsg
 		return
 	}
-	if _, err = models.Redis.HSet("ws:connpool", strconv.Itoa(uid), str).Result(); err != nil {
+	if _, err = models.Redis.HSet("ws:connpool", uid, str).Result(); err != nil {
 		log.Println("建立连接处理:Redis加入映射关系:", err.Error())
 		replyMsg, err := msg.NewReply("连接失败:服务器异常", models.ReplyError)
 		if err != nil {
@@ -76,14 +76,14 @@ func disconnection(msg *models.Msg)  {
 	// 1. 清理redis[uid<->uuid]的映射
 	uuid, ok := ConnsMap[msg.Session]
 	if !ok {
-		log.Printf("断开连接处理:ack %s, session %s:未能找到连接映射", msg.Ack, msg.Session)
+		log.Printf("断开连接处理:ack:%v,未能找到连接映射", msg.Ack)
 		return
 	}
 	strUuid := strings.Split(uuid, "@")
 	uid := strUuid[0]
 	data, err  := models.Redis.HGet("ws:connpool", uid).Result()
 	if err != nil {
-		log.Printf("断开连接处理:ack %s, session %s:获取映射关系:%s", msg.Ack, msg.Session, err.Error())
+		log.Printf("断开连接处理:ack:%v,获取映射关系:%s", msg.Ack, err.Error())
 		return
 	}
 	var v []string

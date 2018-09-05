@@ -62,7 +62,7 @@ func main() {
 		log.Println("发生错误", e.Error())
 	})
 
-	// TODO 监听接收事件
+	// 监听接收事件
 	m.HandleMessage(func(s *melody.Session, bytes []byte) {
 		//1. 实例化消息
 		msg, err := models.NewMsg(bytes, s, models.MsgType)
